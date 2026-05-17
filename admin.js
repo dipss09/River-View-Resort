@@ -16,17 +16,17 @@ if (location.protocol === 'file:') {
 //  🔥 FIREBASE CONFIG
 // ──────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyBWYkuBFcPXZ-bITnXv2fCWTQJKpH_wbYU",
-  authDomain: "sundar-hotel-resort-50dd9.firebaseapp.com",
-  projectId: "sundar-hotel-resort-50dd9",
-  storageBucket: "sundar-hotel-resort-50dd9.appspot.com",
-  messagingSenderId: "412496518341",
-  appId: "1:412496518341:web:acb05a67b6919a0494a4ac",
-  measurementId: "G-7JDW4RMDLV"
+  apiKey: "AIzaSyC_NCrYwvWmg1kZd1ICLgXldbT_UXDRM0U",
+  authDomain: "riverviewresort-a7373.firebaseapp.com",
+  projectId: "riverviewresort-a7373",
+  storageBucket: "riverviewresort-a7373.firebasestorage.app",
+  messagingSenderId: "154113399866",
+  appId: "1:154113399866:web:4137690e3ad12daa416903",
+  measurementId: "G-7D0Z8DFQG8"
 };
 
-// Allowed admin emails (fallback — also stored in Firestore)
-const ADMIN_EMAILS = ["sundarhotelresort@gmail.com"];
+// Allowed admin emails — update this after first login
+const ADMIN_EMAILS = ["dipss09@gmail.com"];
 
 try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error("Firebase init:", e); }
 const db = firebase.firestore();
@@ -48,7 +48,7 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     // Check whitelist
     try {
-      const settingsDoc = await db.collection("siteContent").doc("settings").get();
+      const settingsDoc = await db.collection("rv_siteContent").doc("settings").get();
       if (settingsDoc.exists && settingsDoc.data().adminEmails) {
         allowedEmails = settingsDoc.data().adminEmails;
       }
@@ -156,7 +156,7 @@ function showMsg(id) {
 //  🏠 HERO
 // ──────────────────────────────────────────────
 function loadHero() {
-  db.collection("siteContent").doc("hero").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("hero").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("hero-title-input").value = d.heroTitle || '';
@@ -176,7 +176,7 @@ document.getElementById("hero-form").addEventListener("submit", async e => {
       payload.heroImage = await compressAndUpload(file);
       document.getElementById('hero-upload-progress').classList.add('hidden');
     }
-    await db.collection("siteContent").doc("hero").set(payload, {merge:true});
+    await db.collection("rv_siteContent").doc("hero").set(payload, {merge:true});
     showMsg("hero-msg"); document.getElementById("hero-img-input").value = '';
   } catch (err) {
     console.error(err);
@@ -191,7 +191,7 @@ document.getElementById("hero-form").addEventListener("submit", async e => {
 //  ℹ️ ABOUT
 // ──────────────────────────────────────────────
 function loadAbout() {
-  db.collection("siteContent").doc("about").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("about").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("about-title-input").value = d.title || '';
@@ -211,7 +211,7 @@ document.getElementById("about-form").addEventListener("submit", async e => {
       payload.image = await compressAndUpload(file);
       document.getElementById('about-upload-progress').classList.add('hidden');
     }
-    await db.collection("siteContent").doc("about").set(payload, {merge:true});
+    await db.collection("rv_siteContent").doc("about").set(payload, {merge:true});
     showMsg("about-msg"); document.getElementById("about-img-input").value = '';
   } catch (err) {
     console.error(err);
@@ -226,7 +226,7 @@ document.getElementById("about-form").addEventListener("submit", async e => {
 // ──────────────────────────────────────────────
 let currentRooms = [];
 function loadRooms() {
-  db.collection("rooms").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_rooms").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("rooms-grid");
     currentRooms = []; let html = '';
     snap.forEach(doc => { const p = doc.data(); p.id = doc.id; currentRooms.push(p);
@@ -250,7 +250,7 @@ window.editRoom = function(id) {
   document.getElementById('room-modal-title').textContent='Edit Room';
   document.getElementById('room-modal').classList.remove('hidden');
 };
-window.deleteRoom = function(id) { if(confirm('Delete this room?')) db.collection('rooms').doc(id).delete(); };
+window.deleteRoom = function(id) { if(confirm('Delete this room?')) db.collection('rv_rooms').doc(id).delete(); };
 document.getElementById("room-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
@@ -260,8 +260,8 @@ document.getElementById("room-form").addEventListener("submit", async e => {
     const file = document.getElementById('room-img').files[0];
     if (file) { document.getElementById('room-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('room-upload-progress').classList.add('hidden'); }
     else { const old = document.getElementById('room-img-url').value; if(old) payload.image = old; }
-    if (id) await db.collection('rooms').doc(id).update(payload);
-    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rooms').add(payload); }
+    if (id) await db.collection('rv_rooms').doc(id).update(payload);
+    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_rooms').add(payload); }
     document.getElementById("room-msg").classList.remove("hidden");
     setTimeout(() => { document.getElementById("room-msg").classList.add("hidden"); closeRoomModal(); }, 1500);
   } catch (err) {
@@ -277,7 +277,7 @@ document.getElementById("room-form").addEventListener("submit", async e => {
 // ──────────────────────────────────────────────
 let currentServices = [];
 function loadServices() {
-  db.collection("services").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_services").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("services-grid");
     currentServices = []; let html = '';
     snap.forEach(doc => { const p = doc.data(); p.id = doc.id; currentServices.push(p);
@@ -301,7 +301,7 @@ window.editService = function(id) {
   document.getElementById('service-modal-title').textContent='Edit Item';
   document.getElementById('service-modal').classList.remove('hidden');
 };
-window.deleteService = function(id) { if(confirm('Delete this item?')) db.collection('services').doc(id).delete(); };
+window.deleteService = function(id) { if(confirm('Delete this item?')) db.collection('rv_services').doc(id).delete(); };
 document.getElementById("service-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
@@ -311,8 +311,8 @@ document.getElementById("service-form").addEventListener("submit", async e => {
     const file = document.getElementById('svc-img').files[0];
     if (file) { document.getElementById('svc-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('svc-upload-progress').classList.add('hidden'); }
     else { const old = document.getElementById('svc-img-url').value; if(old) payload.image = old; }
-    if (id) await db.collection('services').doc(id).update(payload);
-    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('services').add(payload); }
+    if (id) await db.collection('rv_services').doc(id).update(payload);
+    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_services').add(payload); }
     document.getElementById("svc-msg").classList.remove("hidden");
     setTimeout(() => { document.getElementById("svc-msg").classList.add("hidden"); closeServiceModal(); }, 1500);
   } catch (err) {
@@ -328,7 +328,7 @@ document.getElementById("service-form").addEventListener("submit", async e => {
 // ──────────────────────────────────────────────
 let currentOffers = [];
 function loadOffers() {
-  db.collection("offers").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_offers").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("offers-grid");
     currentOffers = []; let html = '';
     snap.forEach(doc => { const p = doc.data(); p.id = doc.id; currentOffers.push(p);
@@ -352,7 +352,7 @@ window.editOffer = function(id) {
   document.getElementById('offer-modal-title').textContent='Edit Offer';
   document.getElementById('offer-modal').classList.remove('hidden');
 };
-window.deleteOffer = function(id) { if(confirm('Delete this offer?')) db.collection('offers').doc(id).delete(); };
+window.deleteOffer = function(id) { if(confirm('Delete this offer?')) db.collection('rv_offers').doc(id).delete(); };
 document.getElementById("offer-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
@@ -362,8 +362,8 @@ document.getElementById("offer-form").addEventListener("submit", async e => {
     const file = document.getElementById('offer-img').files[0];
     if (file) { document.getElementById('offer-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('offer-upload-progress').classList.add('hidden'); }
     else { const old = document.getElementById('offer-img-url').value; if(old) payload.image = old; }
-    if (id) await db.collection('offers').doc(id).update(payload);
-    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('offers').add(payload); }
+    if (id) await db.collection('rv_offers').doc(id).update(payload);
+    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_offers').add(payload); }
     document.getElementById("offer-msg").classList.remove("hidden");
     setTimeout(() => { document.getElementById("offer-msg").classList.add("hidden"); closeOfferModal(); }, 1500);
   } catch (err) {
@@ -379,7 +379,7 @@ document.getElementById("offer-form").addEventListener("submit", async e => {
 // ──────────────────────────────────────────────
 let currentMenu = [];
 function loadMenu() {
-  db.collection("restaurantMenu").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_restaurantMenu").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("menu-grid");
     currentMenu = []; let html = '';
     snap.forEach(doc => { const p = doc.data(); p.id = doc.id; currentMenu.push(p);
@@ -406,7 +406,7 @@ window.editMenu = function(id) {
   document.getElementById('menu-modal-title').textContent='Edit Menu Item';
   document.getElementById('menu-modal').classList.remove('hidden');
 };
-window.deleteMenu = function(id) { if(confirm('Delete this menu item?')) db.collection('restaurantMenu').doc(id).delete(); };
+window.deleteMenu = function(id) { if(confirm('Delete this menu item?')) db.collection('rv_restaurantMenu').doc(id).delete(); };
 document.getElementById("menu-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
@@ -416,8 +416,8 @@ document.getElementById("menu-form").addEventListener("submit", async e => {
     const file = document.getElementById('menu-img').files[0];
     if (file) { document.getElementById('menu-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('menu-upload-progress').classList.add('hidden'); }
     else { const old = document.getElementById('menu-img-url').value; if(old) payload.image = old; }
-    if (id) await db.collection('restaurantMenu').doc(id).update(payload);
-    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('restaurantMenu').add(payload); }
+    if (id) await db.collection('rv_restaurantMenu').doc(id).update(payload);
+    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_restaurantMenu').add(payload); }
     document.getElementById("menu-msg").classList.remove("hidden");
     setTimeout(() => { document.getElementById("menu-msg").classList.add("hidden"); closeMenuModal(); }, 1500);
   } catch (err) { console.error(err); alert("Error saving: " + (err.message || err)); } finally { btn.disabled = false; }
@@ -427,7 +427,7 @@ document.getElementById("menu-form").addEventListener("submit", async e => {
 //  🍽️ DINING
 // ──────────────────────────────────────────────
 function loadDining() {
-  db.collection("siteContent").doc("dining").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("dining").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("dining-title-input").value = d.title || '';
@@ -447,7 +447,7 @@ document.getElementById("dining-form").addEventListener("submit", async e => {
       payload.image = await compressAndUpload(file);
       document.getElementById('dining-upload-progress').classList.add('hidden');
     }
-    await db.collection("siteContent").doc("dining").set(payload, {merge:true});
+    await db.collection("rv_siteContent").doc("dining").set(payload, {merge:true});
     showMsg("dining-msg"); document.getElementById("dining-img-input").value = '';
   } catch (err) {
     console.error(err);
@@ -461,7 +461,7 @@ document.getElementById("dining-form").addEventListener("submit", async e => {
 //  🖼️ GALLERY CRUD
 // ──────────────────────────────────────────────
 function loadGallery() {
-  db.collection("gallery").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_gallery").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("gallery-grid");
     let html = '';
     snap.forEach(doc => { const p = doc.data();
@@ -476,7 +476,7 @@ function loadGallery() {
 }
 window.openGalleryModal = function(){ closeGalleryModal(); document.getElementById('gallery-modal').classList.remove('hidden'); };
 window.closeGalleryModal = function(){ document.getElementById('gallery-modal').classList.add('hidden'); document.getElementById('gallery-form').reset(); document.getElementById('gal-img-preview').innerHTML=''; };
-window.deleteGallery = function(id) { if(confirm('Delete this photo?')) db.collection('gallery').doc(id).delete(); };
+window.deleteGallery = function(id) { if(confirm('Delete this photo?')) db.collection('rv_gallery').doc(id).delete(); };
 document.getElementById("gallery-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
@@ -494,7 +494,7 @@ document.getElementById("gallery-form").addEventListener("submit", async e => {
         image: base64Img,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
-      return db.collection('gallery').add(payload);
+      return db.collection('rv_gallery').add(payload);
     });
 
     await Promise.all(uploadPromises);
@@ -509,7 +509,7 @@ document.getElementById("gallery-form").addEventListener("submit", async e => {
 //  ✨ EXTRA SECTIONS (Trust Banner, Location, etc.)
 // ──────────────────────────────────────────────
 function loadExtras() {
-  db.collection("siteContent").doc("trustBanner").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("trustBanner").onSnapshot(doc => {
     if(!doc.exists) return; const d = doc.data();
     document.getElementById("trust-google").value = d.googleText || '';
     document.getElementById("trust-google-sub").value = d.googleSub || '';
@@ -518,13 +518,13 @@ function loadExtras() {
     document.getElementById("trust-third").value = d.thirdText || '';
     document.getElementById("trust-third-sub").value = d.thirdSub || '';
   });
-  db.collection("siteContent").doc("location").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("location").onSnapshot(doc => {
     if(!doc.exists) return; const d = doc.data();
     document.getElementById("loc-address").value = d.address || '';
     document.getElementById("loc-checkin").value = d.checkin || '';
     document.getElementById("loc-checkout").value = d.checkout || '';
   });
-  db.collection("siteContent").doc("headers").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("headers").onSnapshot(doc => {
     if(!doc.exists) return; const d = doc.data();
     if(d.acc) {
       document.getElementById("head-acc-kicker").value = d.acc.kicker || '';
@@ -548,7 +548,7 @@ document.getElementById("headers-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
   try {
-    await db.collection("siteContent").doc("headers").set({
+    await db.collection("rv_siteContent").doc("headers").set({
       acc: {
         kicker: document.getElementById("head-acc-kicker").value,
         title: document.getElementById("head-acc-title").value,
@@ -573,7 +573,7 @@ document.getElementById("trust-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
   try {
-    await db.collection("siteContent").doc("trustBanner").set({
+    await db.collection("rv_siteContent").doc("trustBanner").set({
       googleText: document.getElementById("trust-google").value,
       googleSub: document.getElementById("trust-google-sub").value,
       tripText: document.getElementById("trust-trip").value,
@@ -589,7 +589,7 @@ document.getElementById("location-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
   try {
-    await db.collection("siteContent").doc("location").set({
+    await db.collection("rv_siteContent").doc("location").set({
       address: document.getElementById("loc-address").value,
       checkin: document.getElementById("loc-checkin").value,
       checkout: document.getElementById("loc-checkout").value
@@ -602,7 +602,7 @@ document.getElementById("location-form").addEventListener("submit", async e => {
 //  ⭐ REVIEWS
 // ──────────────────────────────────────────────
 function loadReviews() {
-  db.collection("reviews").orderBy("createdAt","desc").onSnapshot(snap => {
+  db.collection("rv_reviews").orderBy("createdAt","desc").onSnapshot(snap => {
     const grid = document.getElementById("reviews-grid");
     if (snap.empty) { grid.innerHTML = '<div class="p-8 text-center text-on-surface-variant col-span-full">No reviews yet.</div>'; return; }
     let html = '';
@@ -622,14 +622,14 @@ function loadReviews() {
     grid.innerHTML = html;
   });
 }
-window.setReviewStatus = function(id, approved) { db.collection('reviews').doc(id).update({approved}); };
-window.deleteReview = function(id) { if(confirm('Delete this review permanently?')) db.collection('reviews').doc(id).delete(); };
+window.setReviewStatus = function(id, approved) { db.collection('rv_reviews').doc(id).update({approved}); };
+window.deleteReview = function(id) { if(confirm('Delete this review permanently?')) db.collection('rv_reviews').doc(id).delete(); };
 
 // ──────────────────────────────────────────────
 //  ⚙️ SETTINGS
 // ──────────────────────────────────────────────
 function loadSettings() {
-  db.collection("siteContent").doc("settings").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("settings").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("set-whatsapp").value = d.whatsapp || '';
@@ -661,7 +661,7 @@ document.getElementById("settings-form").addEventListener("submit", async e => {
       booking_goibibo: document.getElementById("set-book-goibibo").value,
       adminEmails: emails.length ? emails : ADMIN_EMAILS
     };
-    await db.collection("siteContent").doc("settings").set(payload, {merge:true});
+    await db.collection("rv_siteContent").doc("settings").set(payload, {merge:true});
     allowedEmails = payload.adminEmails;
     showMsg("settings-msg");
   } catch (err) {
@@ -681,7 +681,7 @@ document.getElementById("logo-form").addEventListener("submit", async e => {
     
     document.getElementById('logo-upload-progress').classList.remove('hidden');
     const base64Img = await compressAndUpload(file);
-    await db.collection("siteContent").doc("settings").set({ logoUrl: base64Img }, {merge:true});
+    await db.collection("rv_siteContent").doc("settings").set({ logoUrl: base64Img }, {merge:true});
     document.getElementById('logo-upload-progress').classList.add('hidden');
     
     showMsg("logo-msg");
@@ -707,7 +707,7 @@ window.removeImage = async function(docName, fieldName = 'image') {
     // Special cases where field name varies
     if(docName === 'hero' && fieldName === 'image') update['heroImage'] = firebase.firestore.FieldValue.delete();
     
-    await db.collection("siteContent").doc(docName).update(update);
+    await db.collection("rv_siteContent").doc(docName).update(update);
     alert('Image removed successfully.');
     // Clear preview manually
     const previewEl = document.getElementById(`${docName}-img-preview`);
@@ -722,7 +722,7 @@ window.removeImage = async function(docName, fieldName = 'image') {
 //  💪 FACILITIES CRUD
 // ──────────────────────────────────────────────
 function loadFacilitiesStatic() {
-  db.collection("siteContent").doc("facilities").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("facilities").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("fac-card1").value = (d.card1 || []).join(', ');
@@ -742,7 +742,7 @@ document.getElementById("facilities-static-form").addEventListener("submit", asy
       card3: document.getElementById("fac-card3").value.split(',').map(s => s.trim()).filter(Boolean)
     };
     
-    await db.collection("siteContent").doc("facilities").set(payload, {merge: true});
+    await db.collection("rv_siteContent").doc("facilities").set(payload, {merge: true});
     showMsg("fac-msg");
   } catch(err) {
     console.error(err);
@@ -756,7 +756,7 @@ document.getElementById("facilities-static-form").addEventListener("submit", asy
 //  🌴 LEISURE SECTION
 // ──────────────────────────────────────────────
 function loadLeisure() {
-  db.collection("siteContent").doc("leisure").onSnapshot(doc => {
+  db.collection("rv_siteContent").doc("leisure").onSnapshot(doc => {
     if (!doc.exists) return;
     const d = doc.data();
     document.getElementById("leisure-kicker").value = d.kicker || '';
@@ -789,7 +789,7 @@ document.getElementById("leisure-form").addEventListener("submit", async e => {
     const f2 = document.getElementById("leisure-img2").files[0];
     if (f2) payload.img2 = await compressAndUpload(f2);
     
-    await db.collection("siteContent").doc("leisure").set(payload, {merge: true});
+    await db.collection("rv_siteContent").doc("leisure").set(payload, {merge: true});
     showMsg("leisure-msg");
     document.getElementById("leisure-img1").value = '';
     document.getElementById("leisure-img2").value = '';

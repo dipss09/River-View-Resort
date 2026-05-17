@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fetch Hero from Firestore (Real-time)
-    db.collection("siteContent").doc("hero").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("hero").onSnapshot(doc => {
         if (doc.exists) {
             const data = doc.data();
             if (data.heroTitle) document.getElementById('hero-title').innerHTML = data.heroTitle;
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, err => console.log('Hero fetch:', err));
 
     // Fetch About from Firestore (Real-time)
-    db.collection("siteContent").doc("about").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("about").onSnapshot(doc => {
         if (doc.exists) {
             const data = doc.data();
             if (data.title) document.getElementById('about-title').innerHTML = data.title;
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         roomsList.style.listStyle = "none";
         roomsList.style.padding = "0";
 
-        db.collection("rooms").onSnapshot(snapshot => {
+        db.collection("rv_rooms").onSnapshot(snapshot => {
             const rooms = [];
             snapshot.forEach(doc => rooms.push(doc.data()));
 
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch Services (What's New) from Firestore (Real-time)
     const facilitiesList = document.getElementById('facilities-list');
     if (facilitiesList) {
-        db.collection("services").onSnapshot(snapshot => {
+        db.collection("rv_services").onSnapshot(snapshot => {
             const items = [];
             snapshot.forEach(doc => items.push(doc.data()));
 
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch Offers from Firestore (Real-time)
     const offersList = document.getElementById('offers-list');
     if (offersList) {
-        db.collection("offers").onSnapshot(snapshot => {
+        db.collection("rv_offers").onSnapshot(snapshot => {
             const items = [];
             snapshot.forEach(doc => items.push(doc.data()));
 
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fetch Dining from Firestore (Real-time)
-    db.collection("siteContent").doc("dining").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("dining").onSnapshot(doc => {
         if (doc.exists) {
             const data = doc.data();
             if (data.title) document.getElementById('dining-title').innerHTML = data.title;
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch Reviews from Firestore (only approved, Real-time)
     const reviewsList = document.getElementById('reviews-list');
     if (reviewsList) {
-        db.collection("reviews").where("approved", "==", true).orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        db.collection("rv_reviews").where("approved", "==", true).orderBy("createdAt", "desc").onSnapshot(snapshot => {
             const items = [];
             snapshot.forEach(doc => items.push(doc.data()));
 
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = "Submitting...";
             submitBtn.disabled = true;
 
-            db.collection("reviews").add({
+            db.collection("rv_reviews").add({
                 name: name,
                 rating: rating,
                 content: content,
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch Restaurant Menu
     const menuContainer = document.getElementById('menu-container');
     if (menuContainer) {
-        db.collection("restaurantMenu").orderBy("category").onSnapshot(snapshot => {
+        db.collection("rv_restaurantMenu").orderBy("category").onSnapshot(snapshot => {
             const items = [];
             snapshot.forEach(doc => items.push(doc.data()));
             if (items.length > 0) {
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch Gallery
     const galleryGrid = document.querySelector('.gallery-grid');
     if (galleryGrid) {
-        db.collection("gallery").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        db.collection("rv_gallery").orderBy("createdAt", "desc").onSnapshot(snapshot => {
             const items = [];
             snapshot.forEach(doc => items.push(doc.data()));
             if (items.length > 0) {
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fetch Extra Sections (Trust Banner, Location, Settings)
-    db.collection("siteContent").doc("trustBanner").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("trustBanner").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             const gt = document.getElementById('trust-google-text'); if(gt && d.googleText) gt.textContent = d.googleText;
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    db.collection("siteContent").doc("location").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("location").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             const addr = document.getElementById('loc-addr'); if(addr) addr.textContent = d.address;
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    db.collection("siteContent").doc("settings").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("settings").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             // Update Logos
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    db.collection("siteContent").doc("headers").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("headers").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             if (d.acc) {
@@ -574,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Fetch Leisure (Real-time)
-    db.collection("siteContent").doc("leisure").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("leisure").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             const kicker = document.getElementById('leisure-kicker'); if(kicker && d.kicker) kicker.textContent = d.kicker;
@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Fetch Facilities (Real-time)
-    db.collection("siteContent").doc("facilities").onSnapshot(doc => {
+    db.collection("rv_siteContent").doc("facilities").onSnapshot(doc => {
         if(doc.exists) {
             const d = doc.data();
             
