@@ -25,8 +25,8 @@ const firebaseConfig = {
   measurementId: "G-7D0Z8DFQG8"
 };
 
-// Allowed admin emails — update this after first login
-const ADMIN_EMAILS = ["dipss09@gmail.com"];
+// Allowed admin emails — only these Google accounts can access the admin panel
+const ADMIN_EMAILS = ["riverviewresort110@gmail.com"];
 
 try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error("Firebase init:", e); }
 const db = firebase.firestore();
