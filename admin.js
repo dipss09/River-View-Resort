@@ -148,8 +148,43 @@ function compressAndUpload(file, maxWidth = 800) {
 
 function showMsg(id) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.classList.remove('hidden');
   setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+// ── Global toast overlay ──
+function showToast(message, type = 'saving') {
+  let toast = document.getElementById('_global_toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = '_global_toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;min-width:260px;max-width:360px;padding:16px 22px;border-radius:16px;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);transform:translateY(100px);opacity:0;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  if (type === 'saving') {
+    toast.style.background = '#1e293b';
+    toast.style.color = 'white';
+    toast.innerHTML = '<svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#60a5fa" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="31.4"><animate attributeName="stroke-dashoffset" values="31.4;0" dur="1.2s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="1.2s" repeatCount="indefinite"/></circle></svg><span>' + message + '</span>';
+  } else if (type === 'success') {
+    toast.style.background = '#166534';
+    toast.style.color = 'white';
+    toast.innerHTML = '<svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg><span>' + message + '</span>';
+  } else {
+    toast.style.background = '#991b1b';
+    toast.style.color = 'white';
+    toast.innerHTML = '<svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg><span>' + message + '</span>';
+  }
+  // Animate in
+  setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+  if (type !== 'saving') {
+    setTimeout(() => { toast.style.transform = 'translateY(100px)'; toast.style.opacity = '0'; }, 3500);
+  }
+  return toast;
+}
+function hideToast() {
+  const toast = document.getElementById('_global_toast');
+  if (toast) { toast.style.transform = 'translateY(100px)'; toast.style.opacity = '0'; }
 }
 
 // ──────────────────────────────────────────────
@@ -168,22 +203,25 @@ function loadHero() {
 document.getElementById("hero-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving Hero Section...', 'saving');
   try {
     const payload = { heroTitle: document.getElementById("hero-title-input").value, heroSubtitle: document.getElementById("hero-subtitle-input").value };
     const file = document.getElementById("hero-img-input").files[0];
     if (file) {
-      document.getElementById('hero-upload-progress').classList.remove('hidden');
+      showToast('Compressing & uploading image... please wait', 'saving');
       payload.heroImage = await compressAndUpload(file);
-      document.getElementById('hero-upload-progress').classList.add('hidden');
     }
+    showToast('Saving to database...', 'saving');
     await db.collection("rv_siteContent").doc("hero").set(payload, {merge:true});
-    showMsg("hero-msg"); document.getElementById("hero-img-input").value = '';
+    showToast('✓ Hero section saved!', 'success');
+    showMsg("hero-msg");
+    document.getElementById("hero-img-input").value = '';
   } catch (err) {
     console.error(err);
+    showToast('Error: ' + (err.message || 'Save failed'), 'error');
     alert("Error saving: " + (err.message || err));
   } finally {
     btn.disabled = false;
-    document.getElementById('hero-upload-progress').classList.add('hidden');
   }
 });
 
@@ -203,22 +241,15 @@ function loadAbout() {
 document.getElementById("about-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving About Section...', 'saving');
   try {
     const payload = { title: document.getElementById("about-title-input").value, description: document.getElementById("about-desc-input").value };
     const file = document.getElementById("about-img-input").files[0];
-    if (file) {
-      document.getElementById('about-upload-progress').classList.remove('hidden');
-      payload.image = await compressAndUpload(file);
-      document.getElementById('about-upload-progress').classList.add('hidden');
-    }
+    if (file) { showToast('Compressing image... please wait', 'saving'); payload.image = await compressAndUpload(file); }
+    showToast('Saving to database...', 'saving');
     await db.collection("rv_siteContent").doc("about").set(payload, {merge:true});
-    showMsg("about-msg"); document.getElementById("about-img-input").value = '';
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ About section saved!', 'success'); showMsg("about-msg"); document.getElementById("about-img-input").value = '';
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -254,22 +285,18 @@ window.deleteRoom = function(id) { if(confirm('Delete this room?')) db.collectio
 document.getElementById("room-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving Room...', 'saving');
   try {
     const id = document.getElementById('room-id').value;
     const payload = { title: document.getElementById('room-title').value, price: document.getElementById('room-price').value };
     const file = document.getElementById('room-img').files[0];
-    if (file) { document.getElementById('room-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('room-upload-progress').classList.add('hidden'); }
+    if (file) { showToast('Compressing image...', 'saving'); payload.image = await compressAndUpload(file); }
     else { const old = document.getElementById('room-img-url').value; if(old) payload.image = old; }
     if (id) await db.collection('rv_rooms').doc(id).update(payload);
     else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_rooms').add(payload); }
-    document.getElementById("room-msg").classList.remove("hidden");
-    setTimeout(() => { document.getElementById("room-msg").classList.add("hidden"); closeRoomModal(); }, 1500);
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ Room saved!', 'success');
+    setTimeout(() => { closeRoomModal(); }, 1500);
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -305,22 +332,17 @@ window.deleteService = function(id) { if(confirm('Delete this item?')) db.collec
 document.getElementById("service-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving item...', 'saving');
   try {
     const id = document.getElementById('svc-id').value;
     const payload = { name: document.getElementById('svc-name').value, description: document.getElementById('svc-desc').value };
     const file = document.getElementById('svc-img').files[0];
-    if (file) { document.getElementById('svc-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('svc-upload-progress').classList.add('hidden'); }
+    if (file) { showToast('Compressing image...', 'saving'); payload.image = await compressAndUpload(file); }
     else { const old = document.getElementById('svc-img-url').value; if(old) payload.image = old; }
     if (id) await db.collection('rv_services').doc(id).update(payload);
     else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_services').add(payload); }
-    document.getElementById("svc-msg").classList.remove("hidden");
-    setTimeout(() => { document.getElementById("svc-msg").classList.add("hidden"); closeServiceModal(); }, 1500);
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ Item saved!', 'success'); setTimeout(() => closeServiceModal(), 1500);
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -356,22 +378,17 @@ window.deleteOffer = function(id) { if(confirm('Delete this offer?')) db.collect
 document.getElementById("offer-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving offer...', 'saving');
   try {
     const id = document.getElementById('offer-id').value;
     const payload = { title: document.getElementById('offer-title').value, description: document.getElementById('offer-desc').value };
     const file = document.getElementById('offer-img').files[0];
-    if (file) { document.getElementById('offer-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('offer-upload-progress').classList.add('hidden'); }
+    if (file) { showToast('Compressing image...', 'saving'); payload.image = await compressAndUpload(file); }
     else { const old = document.getElementById('offer-img-url').value; if(old) payload.image = old; }
     if (id) await db.collection('rv_offers').doc(id).update(payload);
     else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_offers').add(payload); }
-    document.getElementById("offer-msg").classList.remove("hidden");
-    setTimeout(() => { document.getElementById("offer-msg").classList.add("hidden"); closeOfferModal(); }, 1500);
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ Offer saved!', 'success'); setTimeout(() => closeOfferModal(), 1500);
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -410,17 +427,17 @@ window.deleteMenu = function(id) { if(confirm('Delete this menu item?')) db.coll
 document.getElementById("menu-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving menu item...', 'saving');
   try {
     const id = document.getElementById('menu-id').value;
     const payload = { category: document.getElementById('menu-category').value, name: document.getElementById('menu-name').value, description: document.getElementById('menu-desc').value, price: document.getElementById('menu-price').value };
     const file = document.getElementById('menu-img').files[0];
-    if (file) { document.getElementById('menu-upload-progress').classList.remove('hidden'); payload.image = await compressAndUpload(file); document.getElementById('menu-upload-progress').classList.add('hidden'); }
+    if (file) { showToast('Compressing image...', 'saving'); payload.image = await compressAndUpload(file); }
     else { const old = document.getElementById('menu-img-url').value; if(old) payload.image = old; }
     if (id) await db.collection('rv_restaurantMenu').doc(id).update(payload);
     else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('rv_restaurantMenu').add(payload); }
-    document.getElementById("menu-msg").classList.remove("hidden");
-    setTimeout(() => { document.getElementById("menu-msg").classList.add("hidden"); closeMenuModal(); }, 1500);
-  } catch (err) { console.error(err); alert("Error saving: " + (err.message || err)); } finally { btn.disabled = false; }
+    showToast('✓ Menu item saved!', 'success'); setTimeout(() => closeMenuModal(), 1500);
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -439,22 +456,14 @@ function loadDining() {
 document.getElementById("dining-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving Dining Section...', 'saving');
   try {
     const payload = { title: document.getElementById("dining-title-input").value, description: document.getElementById("dining-desc-input").value };
     const file = document.getElementById("dining-img-input").files[0];
-    if (file) {
-      document.getElementById('dining-upload-progress').classList.remove('hidden');
-      payload.image = await compressAndUpload(file);
-      document.getElementById('dining-upload-progress').classList.add('hidden');
-    }
+    if (file) { showToast('Compressing image...', 'saving'); payload.image = await compressAndUpload(file); }
     await db.collection("rv_siteContent").doc("dining").set(payload, {merge:true});
-    showMsg("dining-msg"); document.getElementById("dining-img-input").value = '';
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ Dining section saved!', 'success'); showMsg("dining-msg"); document.getElementById("dining-img-input").value = '';
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -480,29 +489,20 @@ window.deleteGallery = function(id) { if(confirm('Delete this photo?')) db.colle
 document.getElementById("gallery-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  const files = document.getElementById('gal-img').files;
+  if (files.length === 0) { alert('Please select at least one image.'); btn.disabled = false; return; }
+  showToast('Uploading ' + files.length + ' photo(s)... please wait', 'saving');
   try {
-    const files = document.getElementById('gal-img').files;
-    if (files.length === 0) throw new Error("Image is required for gallery.");
-    
-    document.getElementById('gal-upload-progress').classList.remove('hidden');
-    
     const quote = document.getElementById('gal-quote').value;
-    const uploadPromises = Array.from(files).map(async (file) => {
+    let done = 0;
+    for (const file of Array.from(files)) {
+      showToast('Compressing photo ' + (++done) + ' of ' + files.length + '...', 'saving');
       const base64Img = await compressAndUpload(file);
-      const payload = {
-        quote: quote, // Will be empty if not provided, which is fine for bulk
-        image: base64Img,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      return db.collection('rv_gallery').add(payload);
-    });
-
-    await Promise.all(uploadPromises);
-    
-    document.getElementById('gal-upload-progress').classList.add('hidden');
-    document.getElementById("gal-msg").classList.remove("hidden");
-    setTimeout(() => { document.getElementById("gal-msg").classList.add("hidden"); closeGalleryModal(); }, 1500);
-  } catch (err) { console.error(err); alert("Error saving: " + (err.message || err)); } finally { btn.disabled = false; document.getElementById('gal-upload-progress').classList.add('hidden'); }
+      await db.collection('rv_gallery').add({ quote, image: base64Img, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    showToast('✓ ' + files.length + ' photo(s) uploaded!', 'success');
+    setTimeout(() => closeGalleryModal(), 1500);
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -547,55 +547,43 @@ function loadExtras() {
 document.getElementById("headers-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving headers...', 'saving');
   try {
     await db.collection("rv_siteContent").doc("headers").set({
-      acc: {
-        kicker: document.getElementById("head-acc-kicker").value,
-        title: document.getElementById("head-acc-title").value,
-        desc: document.getElementById("head-acc-desc").value
-      },
-      fac: {
-        kicker: document.getElementById("head-fac-kicker").value,
-        title: document.getElementById("head-fac-title").value,
-        desc: document.getElementById("head-fac-desc").value
-      },
-      menu: {
-        kicker: document.getElementById("head-menu-kicker").value,
-        title: document.getElementById("head-menu-title").value,
-        desc: document.getElementById("head-menu-desc").value
-      }
+      acc: { kicker: document.getElementById("head-acc-kicker").value, title: document.getElementById("head-acc-title").value, desc: document.getElementById("head-acc-desc").value },
+      fac: { kicker: document.getElementById("head-fac-kicker").value, title: document.getElementById("head-fac-title").value, desc: document.getElementById("head-fac-desc").value },
+      menu: { kicker: document.getElementById("head-menu-kicker").value, title: document.getElementById("head-menu-title").value, desc: document.getElementById("head-menu-desc").value }
     }, {merge:true});
-    showMsg("headers-msg");
-  } catch (err) { console.error(err); alert("Error: " + err.message); } finally { btn.disabled = false; }
+    showToast('✓ Headers saved!', 'success'); showMsg("headers-msg");
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 document.getElementById("trust-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving trust banner...', 'saving');
   try {
     await db.collection("rv_siteContent").doc("trustBanner").set({
-      googleText: document.getElementById("trust-google").value,
-      googleSub: document.getElementById("trust-google-sub").value,
-      tripText: document.getElementById("trust-trip").value,
-      tripSub: document.getElementById("trust-trip-sub").value,
-      thirdText: document.getElementById("trust-third").value,
-      thirdSub: document.getElementById("trust-third-sub").value
+      googleText: document.getElementById("trust-google").value, googleSub: document.getElementById("trust-google-sub").value,
+      tripText: document.getElementById("trust-trip").value, tripSub: document.getElementById("trust-trip-sub").value,
+      thirdText: document.getElementById("trust-third").value, thirdSub: document.getElementById("trust-third-sub").value
     }, {merge:true});
-    showMsg("trust-msg");
-  } catch (err) { console.error(err); alert("Error: " + err.message); } finally { btn.disabled = false; }
+    showToast('✓ Trust banner saved!', 'success'); showMsg("trust-msg");
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); } finally { btn.disabled = false; }
 });
 
 document.getElementById("location-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving location...', 'saving');
   try {
     await db.collection("rv_siteContent").doc("location").set({
       address: document.getElementById("loc-address").value,
       checkin: document.getElementById("loc-checkin").value,
       checkout: document.getElementById("loc-checkout").value
     }, {merge:true});
-    showMsg("loc-msg");
-  } catch (err) { console.error(err); alert("Error: " + err.message); } finally { btn.disabled = false; }
+    showToast('✓ Location saved!', 'success'); showMsg("loc-msg");
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); } finally { btn.disabled = false; }
 });
 
 // ──────────────────────────────────────────────
@@ -647,6 +635,7 @@ function loadSettings() {
 document.getElementById("settings-form").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type='submit']"); btn.disabled = true;
+  showToast('Saving settings...', 'saving');
   try {
     const emails = document.getElementById("set-admin-emails").value.split('\n').map(e=>e.trim().toLowerCase()).filter(Boolean);
     const payload = {
@@ -663,13 +652,8 @@ document.getElementById("settings-form").addEventListener("submit", async e => {
     };
     await db.collection("rv_siteContent").doc("settings").set(payload, {merge:true});
     allowedEmails = payload.adminEmails;
-    showMsg("settings-msg");
-  } catch (err) {
-    console.error(err);
-    alert("Error saving: " + (err.message || err));
-  } finally {
-    btn.disabled = false;
-  }
+    showToast('✓ Settings saved!', 'success'); showMsg("settings-msg");
+  } catch (err) { console.error(err); showToast('Error: ' + err.message, 'error'); alert("Error: " + err.message); } finally { btn.disabled = false; }
 });
 
 document.getElementById("logo-form").addEventListener("submit", async e => {
