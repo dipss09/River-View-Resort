@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Menu Seed Tool — River View Resort</title>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC_NCrYwvWmg1kZd1ICLgXldbT_UXDRM0U",
+  authDomain: "riverviewresort-a7373.firebaseapp.com",
+  projectId: "riverviewresort-a7373",
+  storageBucket: "riverviewresort-a7373.firebasestorage.app",
+  messagingSenderId: "154113399866",
+  appId: "1:154113399866:web:4137690e3ad12daa416903"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const menuItems = [
+  // SALAD VEG
+  { category: "Salad", name: "Garden Green Salad", description: "Fresh garden greens", price: "₹100", veg: true },
+  { category: "Salad", name: "Fruit Salad", description: "Fresh seasonal fruits", price: "₹130", veg: true },
+  { category: "Salad", name: "Greek Salad", description: "Classic Greek style", price: "₹150", veg: true },
+  { category: "Salad", name: "Russian Salad", description: "Russian style mixed salad", price: "₹150", veg: true },
+  { category: "Salad", name: "Creamy Salad", description: "Creamy garden salad", price: "₹110", veg: true },
+  { category: "Salad", name: "Corn Salad", description: "Fresh corn salad", price: "₹120", veg: true },
+  // SALAD NON VEG
+  { category: "Salad", name: "Chicken Salad", description: "Grilled chicken salad", price: "₹150", veg: false },
+  { category: "Salad", name: "Chicken Sandeko", description: "Nepali style spicy chicken", price: "₹180", veg: false },
+  { category: "Salad", name: "Chicken Grilled Salad", description: "Grilled chicken with greens", price: "₹190", veg: false },
+  // SOUP
+  { category: "Soup", name: "Lemon Coriander Soup", description: "Tangy lemon coriander", price: "₹150 (Veg)", veg: true },
+  { category: "Soup", name: "Manchow Soup", description: "Classic Chinese manchow", price: "₹140 Veg / ₹190 Non-Veg", veg: false },
+  { category: "Soup", name: "Tomato Soup", description: "Fresh tomato soup", price: "₹140 (Veg)", veg: true },
+  { category: "Soup", name: "Hot & Sour Soup", description: "Chinese hot and sour", price: "₹150 Veg / ₹190 Non-Veg", veg: false },
+  { category: "Soup", name: "Sweet Corn Soup", description: "Sweet corn Chinese soup", price: "₹140 Veg / ₹190 Non-Veg", veg: false },
+  { category: "Soup", name: "Clear Soup", description: "Light clear broth", price: "₹130 Veg / ₹150 Non-Veg", veg: false },
+  { category: "Soup", name: "Tom Yum Soup", description: "Thai lemongrass soup", price: "₹160 Veg / ₹190 Non-Veg", veg: false },
+  { category: "Soup", name: "Cream of Soup", description: "Tomato / Mushroom / Chicken", price: "₹160 / ₹190 / ₹270", veg: false },
+  // SANDWICH
+  { category: "Sandwich", name: "Club Sandwiche", description: "Classic club sandwich", price: "₹180 Veg / ₹200 Non-Veg", veg: false },
+  { category: "Sandwich", name: "Grilled Sandwich", description: "Grilled sandwich", price: "₹200 Veg / ₹230 Non-Veg", veg: false },
+  { category: "Sandwich", name: "Bread Omellet", description: "Egg omellet bread", price: "₹160 / ₹190", veg: false },
+  { category: "Sandwich", name: "Cheese Grilled Sandwich", description: "Cheesy grilled sandwich", price: "₹210 Veg / ₹250 Non-Veg", veg: false },
+  { category: "Sandwich", name: "Plain Cheese Sandwich", description: "Simple cheese sandwich", price: "₹150 Veg / ₹190 Non-Veg", veg: false },
+  // SIZZLER
+  { category: "Sizzler", name: "Chicken Sizzler", description: "Hot sizzling chicken platter", price: "₹450", veg: false },
+  { category: "Sizzler", name: "Continental Sizzler", description: "Hot continental sizzler", price: "₹350 Veg / ₹450 Non-Veg", veg: false },
+  // CHOUPSEY
+  { category: "Choupsey", name: "American Choupsey", description: "American style choupsey", price: "₹200 Veg / ₹250 Non-Veg", veg: false },
+  { category: "Choupsey", name: "Chinese Choupsey", description: "Chinese style choupsey", price: "₹200 Veg / ₹250 Non-Veg", veg: false },
+  // CHINESE FRIED RICE
+  { category: "Chinese Fried Rice", name: "Fried Rice", description: "Classic fried rice", price: "₹150 Veg / ₹200 Non-Veg / ₹250 Pork", veg: false },
+  { category: "Chinese Fried Rice", name: "Chilli Garlic Fried Rice", description: "Spicy chilli garlic rice", price: "₹160 Veg / ₹220 Non-Veg / ₹280 Pork", veg: false },
+  { category: "Chinese Fried Rice", name: "Schezwan Fried Rice", description: "Spicy schezwan rice", price: "₹180 Veg / ₹250 Non-Veg / ₹300 Pork", veg: false },
+  { category: "Chinese Fried Rice", name: "Mixed Fried Rice", description: "Mixed fried rice", price: "₹299", veg: false },
+  { category: "Chinese Fried Rice", name: "Prawns Fried Rice", description: "Fried rice with prawns", price: "₹250", veg: false },
+  // CHINESE NOODLES
+  { category: "Chinese Noodles", name: "Chowmine", description: "Classic chowmein noodles", price: "₹170 Veg / ₹230 Non-Veg / ₹250 Pork", veg: false },
+  { category: "Chinese Noodles", name: "Noddles", description: "Plain noodles", price: "₹150 Veg / ₹200 Non-Veg / ₹260 Pork", veg: false },
+  { category: "Chinese Noodles", name: "Hakkha Noodles", description: "Hakka style noodles", price: "₹170 Veg / ₹210 Non-Veg / ₹280 Pork", veg: false },
+  { category: "Chinese Noodles", name: "Schezwan Noodles", description: "Spicy schezwan noodles", price: "₹180 Veg / ₹220 Non-Veg / ₹300 Pork", veg: false },
+  { category: "Chinese Noodles", name: "Chilli Garlic Noodles", description: "Chilli garlic noodles", price: "₹150 Veg / ₹200 Non-Veg / ₹280 Pork", veg: false },
+  { category: "Chinese Noodles", name: "Mixed Noodles", description: "Mixed noodles", price: "₹299 Non-Veg", veg: false },
+  { category: "Chinese Noodles", name: "Prawns Noodle", description: "Noodles with prawns", price: "₹250", veg: false },
+];
+
+async function seed() {
+  document.getElementById('status').textContent = 'Seeding menu... please wait';
+  let count = 0;
+  for (const item of menuItems) {
+    await db.collection('rv_restaurantMenu').add({
+      ...item,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    count++;
+    document.getElementById('status').textContent = `Saved ${count}/${menuItems.length} items...`;
+  }
+  document.getElementById('status').textContent = `✅ Done! ${count} menu items saved. You can close this tab now.`;
+}
+</script>
+</head>
+<body style="font-family:sans-serif; max-width:500px; margin:80px auto; text-align:center; padding:20px;">
+  <h2>🍽️ River View Menu Seeder</h2>
+  <p>Click the button below to import all menu items into your Firebase database.</p>
+  <p style="color:red; font-size:13px;"><strong>⚠️ Only run this ONCE!</strong> It will add all items. Run again = duplicates.</p>
+  <button onclick="seed()" style="background:#1a5c2a; color:white; padding:14px 28px; border:none; border-radius:8px; font-size:16px; cursor:pointer; margin-top:20px;">
+    Import All Menu Items
+  </button>
+  <p id="status" style="margin-top:20px; font-weight:600; color:#1a5c2a;"></p>
+</body>
+</html>

@@ -135,13 +135,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateGallery(index) {
         if (!galleryMainImg) return;
-        galleryMainImg.src = `assets/room ${index}.jpg`;
-        thumbs.forEach(t => t.classList.remove('active'));
-        if (thumbs[index - 1]) {
-            thumbs[index - 1].classList.add('active');
-            thumbs[index - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const imgs = window.roomModalImages || [];
+        if (imgs[index - 1]) {
+            galleryMainImg.src = imgs[index - 1];
+        }
+        const thumbEls = document.querySelectorAll('#room-modal-thumbs .thumb');
+        thumbEls.forEach(t => t.classList.remove('active'));
+        if (thumbEls[index - 1]) {
+            thumbEls[index - 1].classList.add('active');
+            thumbEls[index - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }
+
+    // Load room images into modal from Firestore
+    db.collection("rv_rooms").orderBy("createdAt","desc").onSnapshot(snap => {
+        const imgs = [];
+        snap.forEach(doc => { if(doc.data().image) imgs.push(doc.data().image); });
+        window.roomModalImages = imgs;
+        const thumbsContainer = document.getElementById('room-modal-thumbs');
+        if (!thumbsContainer) return;
+        if (imgs.length === 0) {
+            thumbsContainer.innerHTML = '<p style="color:#aaa; text-align:center; padding:1rem;">Upload room photos from the Admin Panel → Rooms section.</p>';
+            return;
+        }
+        let html = '';
+        imgs.forEach((img, i) => {
+            html += `<img src="${img}" class="thumb${i===0?' active':''}" onclick="setGalleryImage(${i+1})" style="cursor:pointer;">`;
+        });
+        thumbsContainer.innerHTML = html;
+        if (imgs[0] && galleryMainImg) galleryMainImg.src = imgs[0];
+        window.totalImages = imgs.length;
+    });
 
     // ──────────────────────────────────────────────
     //  🔥 FIRESTORE DATA LOADING (replaces Strapi)
